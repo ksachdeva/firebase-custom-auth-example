@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import {Http, Headers} from "@angular/http";
-import {AuthProviders, AuthMethods, FirebaseAuth} from 'angularfire2';
+import {AngularFire, FirebaseAuthState, AuthProviders, AuthMethods, FirebaseAuth} from 'angularfire2';
 import 'rxjs/Rx';
 
 @Component({
@@ -17,16 +17,45 @@ import 'rxjs/Rx';
   </div>
   <button (click)="doLogin()" type="submit" class="btn btn-default">Submit</button>
 </form>
+
+<div *ngIf="showWaiting">
+  <div class="alert alert-info">
+    <strong>Please wait ..</strong>
+  </div>
+</div>
+
+<div *ngIf="showSuccess">
+  <div class="alert alert-success">
+    <strong>Success!</strong>
+    <p>
+    {{ authState | json }}
+    </p>
+  </div>
+</div>
     `
 })
 export class LoginComponent {
 
   email: string;
   password: string;
+  showSuccess: boolean;
+  showWaiting: boolean;
+  authState: FirebaseAuthState;
 
   constructor(
     private http: Http,
+    private af: AngularFire,
     private fbAuth: FirebaseAuth) {
+
+    this.showSuccess = false;
+    this.showWaiting = false;
+
+    this.af.auth.subscribe((auth: FirebaseAuthState) => {
+      console.log(auth);
+      this.showSuccess = true;
+      this.showWaiting = false;
+      this.authState = auth;
+    });
   }
 
   isUndefinedOrEmpty(value: string) {
@@ -34,6 +63,9 @@ export class LoginComponent {
   }
 
   doLogin() {
+
+    this.showSuccess = false;
+    this.showWaiting = true;
 
     if (this.isUndefinedOrEmpty(this.email) || this.isUndefinedOrEmpty(this.password)) {
       alert('Please provide the email & password');
